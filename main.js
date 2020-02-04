@@ -117,7 +117,6 @@ function setup(){
 }
 function draw(){
 	if(running > -1 && running < years){
-		console.log(running, step);
 		if(step == 0){immigrateNewBirds(); status.html('Immigrating new birds');}
 		if(step == 1){recordNumbers(); status.html('Recording Numbers');}
 		if(step == 2){turnKidsToAdults(); status.html('turning kids into adults');}
@@ -184,11 +183,11 @@ function buttonPressed(){
 	tableData = new Array();
 
 	//fill in new values
-	if(kInput.value() > 0){k = int(kInput.value());}
+	if(int(kInput.value()) > 0){k = int(kInput.value());}
 	else{k = 1; kInput.value(k);}
-	if(ceil(Math.log2(sizeInput.value)) == floor(Math.	log2(sizeInput.value))){size = sizeInput.value();}
+	if(int(sizeInput.value()) > 0){size = sizeInput.value();}
 	else{size = 8; sizeInput.value(size);}
-	if(lamdbaInput.value() > 0){lamdba = lamdbaInput.value();}
+	if(int(lamdbaInput.value()) > 0){lamdba = lamdbaInput.value();}
 	else{lamdba = 2; lamdbaInput.value(lamdba);}
 	if(syInput.value() > 0 ){sy = syInput.value();}
 	else{sy = .4; syInput.value(sy);}
@@ -196,13 +195,13 @@ function buttonPressed(){
 	else{sa = .6; saInput.value(sa);}
 	if(superCutoffInput.value() > 0){superCutoff = superCutoffInput.value();}
 	else{superCutoff = .85; superCutoffInput.value(superCutoff);}
-	if(maxTriesInput.value() > 0){maxTries = int(maxTriesInput.value());}
+	if(int(maxTriesInput.value()) > 0){maxTries = int(maxTriesInput.value());}
 	else{maxTries = floor(.5*(size*size)); maxTriesInput.value(maxTries);}
-	if(immigrationNumInput.value() > 0){immigrationNum = immigrationNumInput.value();}
+	if(int(immigrationNumInput.value()) > 0){immigrationNum = immigrationNumInput.value();}
 	else{immigrationNum = 10; immigrationNumInput.value(immigrationNum);}
-	if(numFiresInput.value() > 0){numFires = numFiresInput.value();}
+	if(int(numFiresInput.value()) > 0){numFires = numFiresInput.value();}
 	else{numFires = 1; numFiresInput.value(numFires);}
-	if(sizeFireInput.value() > 0){sizeFire = sizeFireInput.value();}
+	if(int(sizeFireInput.value()) > 0){sizeFire = sizeFireInput.value();}
 	else{sizeFire = floor(.1*(size*size)); sizeFireInput.value(sizeFire);}
 	if(int(yearsInput.value()) > 0){years = yearsInput.value();}
 	else{years = 1; yearsInput.value(years);}
