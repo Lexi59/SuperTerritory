@@ -2,10 +2,11 @@
 let canvasDiv, canvas, gridsize, inputDiv, inputSize;
 let running = -1, step = 0, status;
 //input variables
-let kInput, sizeInput, lamdbaInput, syInput, saInput, fireLengthInput;
-let maxTriesInput, immigrationNumInput, numFiresInput, sizeFireInput, yearsInput, uniformInput;
+let kInput, sizeInput, lamdbaInput, syInput, saInput, fireLengthInput, startingNumInput, fireMultInput;
+let maxTriesInput, immigrationNumInput, numFiresInput, sizeFireInput, yearsInput, uniformInput, surviveKInput;
 //world variables
-let habitatk,size,reproductionk,lamdba,sy,sa,fireLength,maxTries,immigrationNum,numFires,sizeFire, years;
+let habitatk,size,reproductionk,lamdba,sy,sa,fireLength,maxTries, fireMult;
+let immigrationNum,numFires,sizeFire, years, startingNum, surviveK;
 //territory variables
 let territories;
 //bird variables
@@ -42,9 +43,9 @@ function setup(){
 
 	//create inputs
 	inputDiv = createDiv();
-	inputDiv.size(175,20*29);
+	inputDiv.size(175,20*32);
 	inputDiv.style('display','inline-block');
-	inputDiv.style('padding','20px');
+	inputDiv.style('padding','10px');
 
 	status = createP('Waiting for input').parent(inputDiv);
 
@@ -52,7 +53,6 @@ function setup(){
 	createElement('br').parent(inputDiv);
 	habitatkInput = createInput();
 	habitatkInput.parent(inputDiv);
-	habitatkInput.attribute('placeholder', '1');
 	createElement('br').parent(inputDiv);
 	//bigger number here means more picky
 
@@ -60,14 +60,12 @@ function setup(){
 	createElement('br').parent(inputDiv);
 	sizeInput = createInput();
 	sizeInput.parent(inputDiv);
-	sizeInput.attribute('placeholder', '8');
 	createElement('br').parent(inputDiv);
 
 	kp = createElement('label',"Reproduction k:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
 	reproductionkInput = createInput();
 	reproductionkInput.parent(inputDiv);
-	reproductionkInput.attribute('placeholder', '1');
 	createElement('br').parent(inputDiv);
 	//bigger number here means more picky
 
@@ -75,63 +73,72 @@ function setup(){
 	createElement('br').parent(inputDiv);
 	lamdbaInput = createInput();
 	lamdbaInput.parent(inputDiv);
-	lamdbaInput.attribute('placeholder', '2');
+	createElement('br').parent(inputDiv);
+
+	kp = createElement('label',"Survival k:".padEnd(14)).parent(inputDiv);
+	createElement('br').parent(inputDiv);
+	surviveKInput = createInput();
+	surviveKInput.parent(inputDiv);
 	createElement('br').parent(inputDiv);
 
 	kp = createElement('label',"sy:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
 	syInput = createInput();
 	syInput.parent(inputDiv);
-	syInput.attribute('placeholder', '.4');
 	createElement('br').parent(inputDiv);
 
 	kp = createElement('label',"sa:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
 	saInput = createInput();
 	saInput.parent(inputDiv);
-	saInput.attribute('placeholder', '.6');
 	createElement('br').parent(inputDiv);
 
-	kp = createElement('label',"Fire Length:".padEnd(14)).parent(inputDiv);
+	kp = createElement('label',"Burn Length:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
 	fireLengthInput = createInput();
 	fireLengthInput.parent(inputDiv);
-	fireLengthInput.attribute('placeholder', '.85');
 	createElement('br').parent(inputDiv);
 
 	kp = createElement('label',"Maximum Tries to move:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
 	maxTriesInput = createInput();
 	maxTriesInput.parent(inputDiv);
-	maxTriesInput.attribute('placeholder', '50% of cells');
 	createElement('br').parent(inputDiv);
 
 	kp = createElement('label',"Number to Immigrate:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
 	immigrationNumInput = createInput();
 	immigrationNumInput.parent(inputDiv);
-	immigrationNumInput.attribute('placeholder', '10');
 	createElement('br').parent(inputDiv);
 
 	kp = createElement('label',"Number of Fires:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
 	numFiresInput = createInput();
 	numFiresInput.parent(inputDiv);
-	numFiresInput.attribute('placeholder', '1');
 	createElement('br').parent(inputDiv);
 
 	kp = createElement('label',"Size of Fire:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
 	sizeFireInput = createInput();
 	sizeFireInput.parent(inputDiv);
-	sizeFireInput.attribute('placeholder', '10% of cells');
 	createElement('br').parent(inputDiv);
 
 	kp = createElement('label',"years:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
 	yearsInput = createInput();
 	yearsInput.parent(inputDiv);
-	yearsInput.attribute('placeholder','1');
+	createElement('br').parent(inputDiv);
+
+	kp = createElement('label',"Starting Number:".padEnd(14)).parent(inputDiv);
+	createElement('br').parent(inputDiv);
+	startingNumInput = createInput();
+	startingNumInput.parent(inputDiv);
+	createElement('br').parent(inputDiv);
+
+	kp = createElement('label',"Fire Multiplier:".padEnd(14)).parent(inputDiv);
+	createElement('br').parent(inputDiv);
+	fireMultInput = createInput();
+	fireMultInput.parent(inputDiv);
 	createElement('br').parent(inputDiv);
 
 	uniformInput = createInput();
@@ -148,7 +155,7 @@ function setup(){
 	stopBtn.mousePressed(stopPressed);
 }
 function stopPressed(){
-	noLoop();
+	running = -1;
 }
 function draw(){
 	if(running > -1 && running < years){
@@ -203,30 +210,21 @@ function buttonPressed(){
 	tableData = new Array();
 
 	//fill in new values
-	if(habitatkInput.value() >= 0){habitatk = habitatkInput.value();}
-	else{habitatk = 1; habitatkInput.value(habitatk);}
-	if(sizeInput.value() >= 0){size = sizeInput.value();}
-	else{size = 8; sizeInput.value(size);}
-	if(reproductionkInput.value() >= 0){reproductionk = reproductionkInput.value();}
-	else{reproductionk = 1; reproductionkInput.value(reproductionk);}
-	if(lamdbaInput.value() >= 0){lamdba = lamdbaInput.value();}
-	else{lamdba = 2; lamdbaInput.value(lamdba);}
-	if(syInput.value() >= 0 ){sy = syInput.value();}
-	else{sy = .4; syInput.value(sy);}
-	if(saInput.value() >= 0){sa = saInput.value();}
-	else{sa = .6; saInput.value(sa);}
-	if(fireLengthInput.value() >= 0){fireLength = fireLengthInput.value();}
-	else{fireLength = 5; fireLengthInput.value(fireLength);}
-	if(maxTriesInput.value() >= 0){maxTries = int(maxTriesInput.value());}
-	else{maxTries = floor(.5*(size*size)); maxTriesInput.value(maxTries);}
-	if(immigrationNumInput.value() >= 0){immigrationNum = immigrationNumInput.value();}
-	else{immigrationNum = 10; immigrationNumInput.value(immigrationNum);}
-	if(numFiresInput.value() >= 0){numFires = numFiresInput.value();}
-	else{numFires = 1; numFiresInput.value(numFires);}
-	if(sizeFireInput.value() >= 0){sizeFire = sizeFireInput.value();}
-	else{sizeFire = floor(.1*(size*size)); sizeFireInput.value(sizeFire);}
-	if(yearsInput.value() >= 0){years = yearsInput.value();}
-	else{years = 1; yearsInput.value(years);}
+	habitatk = habitatkInput.value();
+	size = sizeInput.value();
+	reproductionk = reproductionkInput.value();
+	lamdba = lamdbaInput.value();
+	surviveK = surviveKInput.value();
+	sy = syInput.value();
+	sa = saInput.value();
+	fireLength = fireLengthInput.value();
+	maxTries = maxTriesInput.value();
+	immigrationNum = immigrationNumInput.value();
+	numFires = numFiresInput.value();
+	sizeFire = sizeFireInput.value();
+	years = yearsInput.value();
+	startingNum = startingNumInput.value();
+	fireMult = fireMultInput.value();
 
 	//algorithm
 	initializeTerritories();
@@ -243,12 +241,13 @@ function initializeTerritories(){
 		}
 		territories.push(temp);
 	}
-	for(var i = 0; i < 10; i++){
+	for(var i = 0; i < startingNum; i++){
 		birds.push(new Bird());
-		moveExistingBirds();
 	}
+	moveExistingBirds();
 }
 function recordNumbers(){
+	console.log("Current number of birds: "+ birds.length);
 	var data = new Array();
 	data.push(birds.length);
 	//check if there is enough cells to split into 4's
@@ -380,4 +379,17 @@ function outputData(){
 	}
 	console.log(strings);
 	saveStrings(strings,'data','csv');
+}
+
+function getRandomPoisson(mean){
+	var L = Math.exp(-mean);
+	var p = 1.0;
+	var k = 0;
+
+	do {
+	    k++;
+	    p *= Math.random();
+	} while (p > L);
+
+	return k - 1;
 }

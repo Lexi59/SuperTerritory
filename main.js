@@ -1,10 +1,9 @@
 function immigrateNewBirds(){
 	newYear();
 	for(var i = 0; i < immigrationNum; i++){
-		var newBird = new Bird();
-		immigrate(newBird);
-		birds.push(newBird);
+		birds.push(new Bird());
 	}
+	moveExistingBirds();
 }
 function moveExistingBirds(){
 	for(var i = 0; i < birds.length; i++){
@@ -12,25 +11,32 @@ function moveExistingBirds(){
 			immigrate(birds[i]);
 		}
 	}
+	cleanBirds();
 }
 function immigrate(bird){
 	var currentNumTries = 0;
-	var spotFound = false;
-	while(!spotFound && currentNumTries != maxTries){
+	bird.territory = -1;
+	while(currentNumTries < maxTries){
 		var currenti= floor(random(0,territories.length));
 		var currentj = floor(random(0,territories.length));
 		var currentTerritory = territories[currenti][currentj];
-		console.log("Try number "+ currentNumTries+ " trying new spot");
-		var r = random();
-		if(r < Math.pow(currentTerritory.h,habitatk) && currentTerritory.bird == -1 && !currentTerritory.fire){
-			spotFound = true;
-			console.log("Bird found spot. r: "+ r+ " y: "+ Math.pow(currentTerritory.h,habitatk)+ " taken: "+ currentTerritory.bird+ " on fire: "+ currentTerritory.fire);
+		if(random() < Math.pow(currentTerritory.h,habitatk) && currentTerritory.bird == -1){
+			bird.territory = currentTerritory;
+			currentTerritory.bird = bird;
+			return;
 		}
-		else{ console.log("Bird moved. r: "+ r+ " y: "+ Math.pow(currentTerritory.h,habitatk)+ " taken: "+ currentTerritory.bird+ " on fire: "+ currentTerritory.fire);}
-		if(currentTerritory.bird == -1 && currentTerritory.fire==0){currentNumTries++;}
+		currentNumTries++;
 	}
-	bird.territory = currentTerritory;
-	currentTerritory.bird = bird;
+}
+
+function cleanBirds(){
+	for(var i = 0; i < birds.length; i++){
+		if(birds[i].territory == -1){
+			console.log("Bird left");
+			birds.splice(i,1);
+			i--;
+		}
+	}
 }
 
 function turnKidsToAdults(){
@@ -44,9 +50,13 @@ function turnKidsToAdults(){
 function reproduce(){
 	var numNewBirds = 0;
 	for(var i = 0; i < birds.length; i++){
-		numNewBirds += floor(lamdba*pow(birds[i].territory.h,reproductionk));
-		console.log("Bird "+ i+ " had "+ floor(lamdba*pow(birds[i].territory.h, reproductionk)) + " kids in territory with " + birds[i].territory.h);
+		var myMean = lamdba*pow(birds[i].territory.h,reproductionk)
+		if(birds[i].territory.fire > 0){myMean *= fireMult;}
+		var myBabies = getRandomPoisson(myMean);
+		numNewBirds += myBabies;
+		//console.log("Bird "+ i+ " had "+ myBabies + " kids in territory with " + birds[i].territory.h + " and fire " + birds[i].territory.fire);
 	}
+	console.log("Number born: " + numNewBirds);
 	for(var i = 0; i < numNewBirds;i++){
 		var b = new Bird();
 		b.adult = false;
@@ -58,19 +68,24 @@ function isInGrid(i,j){
 	return!(i < 0 || i >= territories.length|| j < 0 || j >= territories.length)
 }
 function fires(){
-	for(var fire = 0; fire < numFires; fire++){
+	var poissonFires = getRandomPoisson(numFires);
+	var poissonSize = getRandomPoisson(sizeFire);
+	console.log("This year there will be " + poissonFires + " fires with size "+ poissonSize);
+	for(var fire = 0; fire < poissonFires; fire++){
 		var firei = floor(random(0,territories.length));
 		var firej = floor(random(0,territories.length));
-		for(var numFireCells = 0; numFireCells < sizeFire; numFireCells++){
+		for(var numFireCells = 0; numFireCells < poissonSize; numFireCells++){
 			var fireTerritory = territories[firei][firej];
-			if(fireTerritory.bird != -1){immigrate(fireTerritory.bird); fireTerritory.bird = -1;}
+			//if(fireTerritory.bird != -1){immigrate(fireTerritory.bird); fireTerritory.bird = -1;}
 			fireTerritory.fire = fireLength;
-			console.log("Fire started in cell " + firei + ","+firej);
+			//console.log("Fire started in cell " + firei + ","+firej);
 			var dirx = floor(random(-1,2));
 			var diry = floor(random(-1,2));
-			while((dirx == 0 && diry == 0) || !isInGrid(firei+dirx,firej+diry) || territories[firei+dirx][firej+diry].fire){
+			count = 0;
+			while((dirx == 0 && diry == 0) || !isInGrid(firei+dirx,firej+diry) || territories[firei+dirx][firej+diry].fire && count < 20){
 				dirx = floor(random(-1,2));
 				diry = floor(random(-1,2));
+				count++;
 			}
 			firei = firei+dirx;
 			firej = firej+diry;
@@ -81,8 +96,8 @@ function fires(){
 function winterSurvival(){
 	var survivedBirds = new Array();
 	for(var i = 0; i < birds.length; i++){
-		if(birds[i].adult && random() > sa){survivedBirds.push(birds[i]);}
-		else if (!birds[i].adult && random() > sy){survivedBirds.push(birds[i]);}
+		if(birds[i].adult && random() < sa){survivedBirds.push(birds[i]);}
+		else if (!birds[i].adult && random() < sy){survivedBirds.push(birds[i]);}
 		else{birds[i].territory.bird = -1;}
 	}
 	console.log("Killed " + (birds.length-survivedBirds.length));
