@@ -153,9 +153,15 @@ function setup(){
 	stopBtn = createButton('Stop');
 	stopBtn.parent(inputDiv);
 	stopBtn.mousePressed(stopPressed);
+	contBtn = createButton('Continue');
+	contBtn.parent(inputDiv);
+	contBtn.mousePressed(continuePressed);
 }
 function stopPressed(){
 	running = -1;
+}
+function continuePressed(){
+	running = years -1;
 }
 function draw(){
 	if(running > -1 && running < years){
