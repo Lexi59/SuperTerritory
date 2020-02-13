@@ -69,16 +69,16 @@ function isInGrid(i,j){
 }
 function fires(){
 	var poissonFires = getRandomPoisson(numFires);
-	var poissonSize = getRandomPoisson(sizeFire);
-	console.log("This year there will be " + poissonFires + " fires with size "+ poissonSize);
+	//console.log("This year there will be " + poissonFires + " fires");
 	for(var fire = 0; fire < poissonFires; fire++){
 		var firei = floor(random(0,territories.length));
 		var firej = floor(random(0,territories.length));
+		var poissonSize = getRandomPoisson(sizeFire);
+		//console.log("Fire number " + fire + " is size " + poissonSize);
 		for(var numFireCells = 0; numFireCells < poissonSize; numFireCells++){
 			var fireTerritory = territories[firei][firej];
 			//if(fireTerritory.bird != -1){immigrate(fireTerritory.bird); fireTerritory.bird = -1;}
 			fireTerritory.fire = fireLength;
-			//console.log("Fire started in cell " + firei + ","+firej);
 			var dirx = floor(random(-1,2));
 			var diry = floor(random(-1,2));
 			count = 0;
