@@ -14,18 +14,61 @@ function moveExistingBirds(){
 	cleanBirds();
 }
 function immigrate(bird){
-	var currentNumTries = 0;
-	bird.territory = -1;
-	while(currentNumTries < maxTries){
-		var currenti= floor(random(0,territories.length));
-		var currentj = floor(random(0,territories.length));
-		var currentTerritory = territories[currenti][currentj];
-		if(random() < Math.pow(currentTerritory.h,habitatk) && currentTerritory.bird == -1){
-			bird.territory = currentTerritory;
-			currentTerritory.bird = bird;
-			return;
+	if(!birdMoveRandomCheck.checked()){
+		var myX, myY;
+		//find starting point with parent
+		if(bird.parentTerritory){
+			for(var r = 0; r < territories.length; r++){
+				for(var c = 0; c < territories.length; c++){
+					if(territories[r][c] == bird.parentTerritory){
+						myX = r;
+						myY = c;
+					}
+				}
+			}
 		}
-		currentNumTries++;
+		//starting point without parent
+		else{
+			myX = floor(random(0,territories.length));
+			myY = floor(random(0,territories.length));
+		}
+		//move
+		var dirx = floor(random(-1,2));
+		var diry = floor(random(-1,2));
+		count = 0;
+		while((dirx == 0 && diry == 0) || !isInGrid(myX+dirx,myY+diry) || territories[myX+dirx][myY+diry].bird != -1 && count < maxTries){
+			var myk;
+			if(isInGrid(myX+dirx,myY+diry)){
+				if(territories[myX+dirx][myY+diry].fire > 0){myk = burnk;}
+				else{myk = habitatk;}
+				if(random() < Math.pow(territories[myX+dirx][myY+diry].h, myk)){break;}
+			}
+			dirx = floor(random(-1,2));
+			diry = floor(random(-1,2));
+			count++;
+		}
+		if(count == maxTries){bird.territory = -1;}
+		else{bird.territory = territories[myX+dirx][myY+diry]; territories[myX+dirx][myY+diry].bird = bird;}
+	}
+	else{
+		var currentNumTries = 0;
+		bird.territory = -1;
+		while(currentNumTries < maxTries){
+			var currenti= floor(random(0,territories.length));
+			var currentj = floor(random(0,territories.length));
+			var currentTerritory = territories[currenti][currentj];
+			if(currentTerritory.fire > 0 && random() < Math.pow(currentTerritory.h, burnk) && currentTerritory.bird == -1){
+				bird.territory = currentTerritory;
+				currentTerritory.bird = bird;
+				return;
+			}
+			if(random() < Math.pow(currentTerritory.h,habitatk) && currentTerritory.bird == -1){
+				bird.territory = currentTerritory;
+				currentTerritory.bird = bird;
+				return;
+			}
+			currentNumTries++;
+		}
 	}
 }
 
@@ -44,24 +87,26 @@ function turnKidsToAdults(){
 		if(!birds[i].adult){
 			birds[i].adult = true;
 		}
+		birds[i].parentTerritory = null;
 	}
 }
 
 function reproduce(){
 	var numNewBirds = 0;
-	for(var i = 0; i < birds.length; i++){
+	var adultBirdNumber = birds.length;
+	for(var i = 0; i < adultBirdNumber; i++){
 		var myMean = lamdba*pow(birds[i].territory.h,reproductionk)
 		if(birds[i].territory.fire > 0){myMean *= fireMult;}
 		var myBabies = getRandomPoisson(myMean);
+		for(var j = 0; j < myBabies; j++){
+			var b = new Bird();
+			b.adult = false;
+			b.parentTerritory = birds[i].territory;
+			birds.push(b);
+		}
 		numNewBirds += myBabies;
-		//console.log("Bird "+ i+ " had "+ myBabies + " kids in territory with " + birds[i].territory.h + " and fire " + birds[i].territory.fire);
 	}
 	console.log("Number born: " + numNewBirds);
-	for(var i = 0; i < numNewBirds;i++){
-		var b = new Bird();
-		b.adult = false;
-		birds.push(b);
-	}
 }
 
 function isInGrid(i,j){
@@ -77,7 +122,7 @@ function fires(){
 		//console.log("Fire number " + fire + " is size " + poissonSize);
 		for(var numFireCells = 0; numFireCells < poissonSize; numFireCells++){
 			var fireTerritory = territories[firei][firej];
-			//if(fireTerritory.bird != -1){immigrate(fireTerritory.bird); fireTerritory.bird = -1;}
+			if(fireTerritory.bird != -1 && fireMoveCheck.checked()){immigrate(fireTerritory.bird); fireTerritory.bird = -1;}
 			fireTerritory.fire = fireLength;
 			var dirx = floor(random(-1,2));
 			var diry = floor(random(-1,2));

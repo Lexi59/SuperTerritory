@@ -4,9 +4,10 @@ let running = -1, step = 0, status;
 //input variables
 let kInput, sizeInput, lamdbaInput, syInput, saInput, fireLengthInput, startingNumInput, fireMultInput;
 let maxTriesInput, immigrationNumInput, numFiresInput, sizeFireInput, yearsInput, uniformInput, surviveKInput;
+let fireMoveCheck, smoothingCheck, birdMoveRandomCheck;
 //world variables
 let habitatk,size,reproductionk,lamdba,sy,sa,fireLength,maxTries, fireMult;
-let immigrationNum,numFires,sizeFire, years, startingNum, surviveK;
+let immigrationNum,numFires,sizeFire, years, startingNum, surviveK, burnk;
 //territory variables
 let territories;
 //bird variables
@@ -18,6 +19,7 @@ class Bird{
 	constructor(){
 		this.territory = -1;
 		this.adult = true;
+		this.parentTerritory = null;
 	}
 }
 class Territory{
@@ -39,7 +41,7 @@ function setup(){
 	canvasDiv.style('display','inline-block');
 	canvas = createCanvas(gridsize,gridsize);
 	canvas.parent(canvasDiv);
-	frameRate(1);
+	//frameRate(1);
 
 	//create inputs
 	inputDiv = createDiv();
@@ -53,6 +55,12 @@ function setup(){
 	createElement('br').parent(inputDiv);
 	habitatkInput = createInput();
 	habitatkInput.parent(inputDiv);
+	createElement('br').parent(inputDiv);
+
+	kp = createElement('label',"Burn k:".padEnd(14)).parent(inputDiv);
+	createElement('br').parent(inputDiv);
+	burnkInput = createInput();
+	burnkInput.parent(inputDiv);
 	createElement('br').parent(inputDiv);
 	//bigger number here means more picky
 
@@ -146,6 +154,14 @@ function setup(){
 	uniformInput.attribute('placeholder','uniform');
 	createElement('br').parent(inputDiv);
 
+	//checkboxes
+	fireMoveCheck = createCheckbox('Fire moves birds');
+	fireMoveCheck.parent(inputDiv);
+	birdMoveRandomCheck = createCheckbox('Birds move randomly');
+	birdMoveRandomCheck.parent(inputDiv);
+	smoothingCheck = createCheckbox('Smooth habitat qualities');
+	smoothingCheck.parent(inputDiv);
+
 	//create Button
 	submitBtn = createButton('Submit');
 	submitBtn.parent(inputDiv);
@@ -194,7 +210,7 @@ function drawTerritories(){
 			stroke(0);
 			strokeWeight(t.s/16);
 			if (t.fire > 0){fill(255,0,0);}
-			else{fill(map(t.h,0,1,127,255));}
+			else{fill(map(t.h,0,1,100,255));}
 			rect(t.x, t.y, t.s, t.s);
 		}
 	}
@@ -239,13 +255,18 @@ function buttonPressed(){
 }
 function initializeTerritories(){
 	var s = gridsize/size;
+	var yoff = 0;
 	for(var i = 0; i < size; i++){
+		var xoff=0;
 		var temp = new Array();
 		for(var j = 0; j < size; j++){
 			if(uniformInput.value() > 0){temp.push(new Territory(j*s,i*s,s,parseFloat(uniformInput.value())));}
-			else{temp.push(new Territory(j*s, i*s, s, random()));}
+			else if (smoothingCheck.checked()){temp.push(new Territory(j*s, i*s, s, noise(xoff,yoff)));}
+			else{temp.push(new Territory(j*s,i*s,s,random()));}
+			xoff+=0.2;
 		}
 		territories.push(temp);
+		yoff += 0.45;
 	}
 	for(var i = 0; i < startingNum; i++){
 		birds.push(new Bird());
@@ -253,6 +274,7 @@ function initializeTerritories(){
 	moveExistingBirds();
 }
 function recordNumbers(){
+	console.log("Year: " + running);
 	console.log("Current number of birds: "+ birds.length);
 	var data = new Array();
 	data.push(birds.length);
@@ -385,6 +407,42 @@ function outputData(){
 	}
 	console.log(strings);
 	saveStrings(strings,'data','csv');
+	//outputStatistics();
+}
+function outputStatistics(){
+	var strings = new Array(3);
+	var columns = tableData[0].length;
+	var averageZeroLength = 0, averageNumberLength = 0, currentLength, averageValue;
+	for(var i = 0; i < 4; i++){strings[i] = new Array(columns);}
+	
+	for(var i = 0; i < columns; i++){
+		var currentValue = tableData[0][i];
+		currentLength = 1;
+		if(tableData[0][i] > 0){averageValue= tableData[0][i];}
+		for(var j = 0; j < tableData.length; j++){
+			if(currentValue > 0 && tableData[j][i] > 0){
+				currentLength++;
+				averageValue = (averageValue+tableData[j][i])/2;
+			}
+			else if(currentValue == 0 && tableData[j][i] == 0){
+				currentLength++;
+			}
+			else if (currentValue > 0 && tableData[j][i] == 0){
+				if(averageNumberLength == 0){averageNumberLength = currentLength;}
+				else {averageNumberLength = (averageNumberLength + currentLength)/2;}
+				currentValue = 0;
+				currentLength = 1;
+			}
+			else if (currentValue == 0 && tableData[j][i] > 0){
+				if(averageZeroLength == 0){averageZeroLength = currentLength;}
+				else {averageZeroLength = (averageZeroLength + currentLength)/2;}
+				averageValue = tableData[j][i];
+				currentLength = 1;
+				currentValue = tableData[j][i];
+			}
+		}
+		console.log(averageZeroLength, averageNumberLength, averageValue);
+	}
 }
 
 function getRandomPoisson(mean){
