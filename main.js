@@ -33,22 +33,28 @@ function immigrate(bird){
 			myY = floor(random(0,territories.length));
 		}
 		//move
+		var foundSpot = false;
 		var dirx = floor(random(-1,2));
 		var diry = floor(random(-1,2));
+		var myK;
 		count = 0;
-		while((dirx == 0 && diry == 0) || !isInGrid(myX+dirx,myY+diry) || territories[myX+dirx][myY+diry].bird != -1 && count < maxTries){
-			var myk;
-			if(isInGrid(myX+dirx,myY+diry)){
-				if(territories[myX+dirx][myY+diry].fire > 0){myk = burnk;}
-				else{myk = habitatk;}
-				if(random() < Math.pow(territories[myX+dirx][myY+diry].h, myk)){break;}
+		while(!foundSpot && count < maxTries){
+			if(!(dirx == 0 && diry == 0) && isInGrid(myX+dirx, myY+diry)){
+				myX = myX+dirx;
+				myY = myY+diry;
+				if(territories[myX][myY].fire > 0){myK = burnk;}
+				else{myK = habitatk;}
+				if(random() < Math.pow(territories[myX][myY].h,myK) && territories[myX][myY].bird == -1){
+					foundSpot = true;
+					bird.territory = territories[myX][myY]; 
+					territories[myX][myY].bird = bird;
+				}
 			}
 			dirx = floor(random(-1,2));
 			diry = floor(random(-1,2));
 			count++;
 		}
 		if(count == maxTries){bird.territory = -1;}
-		else{bird.territory = territories[myX+dirx][myY+diry]; territories[myX+dirx][myY+diry].bird = bird;}
 	}
 	else{
 		var currentNumTries = 0;
@@ -141,11 +147,15 @@ function fires(){
 function winterSurvival(){
 	var survivedBirds = new Array();
 	for(var i = 0; i < birds.length; i++){
-		if(birds[i].adult && random() < sa){survivedBirds.push(birds[i]);}
-		else if (!birds[i].adult && random() < sy){survivedBirds.push(birds[i]);}
+		if(birds[i].adult && random() < sa*Math.pow(birds[i].territory.h, surviveKa)){
+			survivedBirds.push(birds[i]);
+		}
+		else if (!birds[i].adult && random() < sy*Math.pow(birds[i].territory.h, surviveKy)){
+			survivedBirds.push(birds[i]);
+		}
 		else{birds[i].territory.bird = -1;}
 	}
-	console.log("Killed " + (birds.length-survivedBirds.length));
+	console.log((birds.length-survivedBirds.length) + " died");
 	birds = survivedBirds;
 }
 

@@ -2,12 +2,10 @@
 let canvasDiv, canvas, gridsize, inputDiv, inputSize;
 let running = -1, step = 0, status;
 //input variables
-let kInput, sizeInput, lamdbaInput, syInput, saInput, fireLengthInput, startingNumInput, fireMultInput;
-let maxTriesInput, immigrationNumInput, numFiresInput, sizeFireInput, yearsInput, uniformInput, surviveKInput;
 let fireMoveCheck, smoothingCheck, birdMoveRandomCheck;
 //world variables
 let habitatk,size,reproductionk,lamdba,sy,sa,fireLength,maxTries, fireMult;
-let immigrationNum,numFires,sizeFire, years, startingNum, surviveK, burnk;
+let immigrationNum,numFires,sizeFire, years, startingNum, surviveKa, surviveKy, burnk;
 //territory variables
 let territories;
 //bird variables
@@ -41,7 +39,6 @@ function setup(){
 	canvasDiv.style('display','inline-block');
 	canvas = createCanvas(gridsize,gridsize);
 	canvas.parent(canvasDiv);
-	//frameRate(1);
 
 	//create inputs
 	inputDiv = createDiv();
@@ -62,7 +59,6 @@ function setup(){
 	burnkInput = createInput();
 	burnkInput.parent(inputDiv);
 	createElement('br').parent(inputDiv);
-	//bigger number here means more picky
 
 	kp = createElement('label',"size:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
@@ -75,7 +71,6 @@ function setup(){
 	reproductionkInput = createInput();
 	reproductionkInput.parent(inputDiv);
 	createElement('br').parent(inputDiv);
-	//bigger number here means more picky
 
 	kp = createElement('label',"lamdba:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
@@ -83,19 +78,25 @@ function setup(){
 	lamdbaInput.parent(inputDiv);
 	createElement('br').parent(inputDiv);
 
-	kp = createElement('label',"Survival k:".padEnd(14)).parent(inputDiv);
+	kp = createElement('label',"Survival k for youth:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
-	surviveKInput = createInput();
-	surviveKInput.parent(inputDiv);
+	surviveKyInput = createInput();
+	surviveKyInput.parent(inputDiv);
 	createElement('br').parent(inputDiv);
 
-	kp = createElement('label',"sy:".padEnd(14)).parent(inputDiv);
+	kp = createElement('label',"Max youth survival rate:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
 	syInput = createInput();
 	syInput.parent(inputDiv);
 	createElement('br').parent(inputDiv);
 
-	kp = createElement('label',"sa:".padEnd(14)).parent(inputDiv);
+	kp = createElement('label',"Survival k for adults:".padEnd(14)).parent(inputDiv);
+	createElement('br').parent(inputDiv);
+	surviveKaInput = createInput();
+	surviveKaInput.parent(inputDiv);
+	createElement('br').parent(inputDiv);
+
+	kp = createElement('label',"Max adult survival rate:".padEnd(14)).parent(inputDiv);
 	createElement('br').parent(inputDiv);
 	saInput = createInput();
 	saInput.parent(inputDiv);
@@ -203,7 +204,6 @@ function draw(){
 }
 function drawTerritories(){
 	if(!territories){return;}
-	//draw normal cells
 	for(var i = 0; i < size; i++){
 		for(var j = 0; j < size; j++){
 			var t = territories[i][j];
@@ -236,7 +236,8 @@ function buttonPressed(){
 	size = sizeInput.value();
 	reproductionk = reproductionkInput.value();
 	lamdba = lamdbaInput.value();
-	surviveK = surviveKInput.value();
+	surviveKa = surviveKaInput.value();
+	surviveKy = surviveKyInput.value();
 	sy = syInput.value();
 	sa = saInput.value();
 	fireLength = fireLengthInput.value();
@@ -407,42 +408,63 @@ function outputData(){
 	}
 	console.log(strings);
 	saveStrings(strings,'data','csv');
-	//outputStatistics();
+	outputStatistics();
 }
 function outputStatistics(){
-	var strings = new Array(3);
-	var columns = tableData[0].length;
-	var averageZeroLength = 0, averageNumberLength = 0, currentLength, averageValue;
-	for(var i = 0; i < 4; i++){strings[i] = new Array(columns);}
+	var zeroLengths = new Array();
+	var numberLengths = new Array();
+	var averageZeroLength = new Array();
+	var averageNumberLength = new Array();
+	var currentLength;
 	
-	for(var i = 0; i < columns; i++){
-		var currentValue = tableData[0][i];
+	for(var i = 0; i < tableData[0].length; i++){
+		var currentValue = tableData[0][i]; //set currentValue to first item in that column
 		currentLength = 1;
-		if(tableData[0][i] > 0){averageValue= tableData[0][i];}
-		for(var j = 0; j < tableData.length; j++){
-			if(currentValue > 0 && tableData[j][i] > 0){
-				currentLength++;
-				averageValue = (averageValue+tableData[j][i])/2;
-			}
-			else if(currentValue == 0 && tableData[j][i] == 0){
+		for(var j = 1; j < tableData.length; j++) //go through each row
+		{
+			if(tableData[j][i] > 0 && currentValue > 0){
 				currentLength++;
 			}
-			else if (currentValue > 0 && tableData[j][i] == 0){
-				if(averageNumberLength == 0){averageNumberLength = currentLength;}
-				else {averageNumberLength = (averageNumberLength + currentLength)/2;}
-				currentValue = 0;
-				currentLength = 1;
+			else if (tableData[j][i] == 0 && currentValue == 0){
+				currentLength++;
 			}
-			else if (currentValue == 0 && tableData[j][i] > 0){
-				if(averageZeroLength == 0){averageZeroLength = currentLength;}
-				else {averageZeroLength = (averageZeroLength + currentLength)/2;}
-				averageValue = tableData[j][i];
-				currentLength = 1;
+			else if (tableData[j][i] == 0 && currentValue > 0){
+				numberLengths.push(currentLength);
 				currentValue = tableData[j][i];
+				currentLength = 1;
+			}
+			else if (tableData[j][i] > 0 && currentValue == 0){
+				zeroLengths.push(currentLength);
+				currentValue = tableData[j][i];
+				currentLength = 1;
 			}
 		}
-		console.log(averageZeroLength, averageNumberLength, averageValue);
+		//add whichever was the last one
+		if(currentValue>0) numberLengths.push(currentLength);
+		else zeroLengths.push(currentLength);
+		
+		var average = 0;
+		for(var k = 0; k < zeroLengths.length; k++){
+			if(average == 0){average = zeroLengths[k];}
+			else average = (average+zeroLengths[k])/2;
+		}
+		averageZeroLength.push(average);
+		zeroLengths = new Array();
+
+		average = 0;
+		for(var k = 0; k < numberLengths.length; k++){
+			if(average == 0){average = numberLengths[k];}
+			average = (average+numberLengths[k])/2;
+		}
+		averageNumberLength.push(average);
+		numberLengths = new Array();
 	}
+	console.log(averageNumberLength);
+	console.log(averageZeroLength);
+	var strings = new Array();
+	strings.push(averageZeroLength.toString());
+	strings.push(averageNumberLength.toString());
+	saveStrings(strings,'stats','csv');
 }
 
 function getRandomPoisson(mean){
