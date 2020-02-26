@@ -2,7 +2,7 @@
 let canvasDiv, canvas, gridsize, inputDiv, inputSize;
 let running = -1, step = 0, status;
 //input variables
-let fireMoveCheck, smoothingCheck, birdMoveRandomCheck;
+let fireMoveCheck, smoothingCheck, birdMoveRandomCheck, backgroundCheck;
 //world variables
 let habitatk,size,reproductionk,lamdba,sy,sa,fireLength,maxTries, fireMult;
 let immigrationNum,numFires,sizeFire, years, startingNum, surviveKa, surviveKy, burnk;
@@ -162,6 +162,8 @@ function setup(){
 	birdMoveRandomCheck.parent(inputDiv);
 	smoothingCheck = createCheckbox('Smooth habitat qualities');
 	smoothingCheck.parent(inputDiv);
+	// backgroundCheck = createCheckbox('Background ');
+	// backgroundCheck.parent(inputDiv);
 
 	//create Button
 	submitBtn = createButton('Submit');
@@ -199,7 +201,8 @@ function draw(){
 		outputData();  
 		running = -1;
 	}
-	drawTerritories();
+	if(backgroundCheck.checked())
+		drawTerritories();
 	drawBirds();
 }
 function drawTerritories(){
@@ -232,6 +235,7 @@ function buttonPressed(){
 	tableData = new Array();
 
 	//fill in new values
+	burnk = burnkInput.value();
 	habitatk = habitatkInput.value();
 	size = sizeInput.value();
 	reproductionk = reproductionkInput.value();

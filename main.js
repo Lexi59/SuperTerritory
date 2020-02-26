@@ -133,7 +133,7 @@ function fires(){
 			var dirx = floor(random(-1,2));
 			var diry = floor(random(-1,2));
 			count = 0;
-			while((dirx == 0 && diry == 0) || !isInGrid(firei+dirx,firej+diry) || territories[firei+dirx][firej+diry].fire && count < 20){
+			while((dirx == 0 && diry == 0) || !isInGrid(firei+dirx,firej+diry) || territories[firei+dirx][firej+diry].fire > 0 && count < 20){
 				dirx = floor(random(-1,2));
 				diry = floor(random(-1,2));
 				count++;
