@@ -201,8 +201,7 @@ function draw(){
 		outputData();  
 		running = -1;
 	}
-	if(backgroundCheck.checked())
-		drawTerritories();
+	drawTerritories();
 	drawBirds();
 }
 function drawTerritories(){
