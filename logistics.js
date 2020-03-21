@@ -162,8 +162,9 @@ function setup(){
 	birdMoveRandomCheck.parent(inputDiv);
 	smoothingCheck = createCheckbox('Smooth habitat qualities');
 	smoothingCheck.parent(inputDiv);
-	// backgroundCheck = createCheckbox('Background ');
-	// backgroundCheck.parent(inputDiv);
+	backgroundCheck = createCheckbox('Background ');
+	backgroundCheck.parent(inputDiv);
+	backgroundCheck.changed(bkgrndRefresh);
 
 	//create Button
 	submitBtn = createButton('Submit');
@@ -182,6 +183,9 @@ function stopPressed(){
 function continuePressed(){
 	running = years -1;
 }
+function bkgrndRefresh(){
+	background(255);
+}
 function draw(){
 	if(running > -1 && running < years){
 		if(step == 0){immigrateNewBirds(); status.html(running + ': Immigrating new birds');}
@@ -198,11 +202,17 @@ function draw(){
 		status.html('Waiting for input');
 	}
 	if(running == years){
+		background(255);
 		outputData();  
 		running = -1;
 	}
-	drawTerritories();
-	drawBirds();
+	if(backgroundCheck.checked()){
+		drawTerritories();
+		drawBirds();
+	}
+	else{
+		drawGraph();
+	}
 }
 function drawTerritories(){
 	if(!territories){return;}
@@ -227,7 +237,24 @@ function drawBirds(){
 		ellipse(t.x+t.s/2,t.y+t.s/2,t.s,t.s);
 	}
 }
+function drawGraph(){
+	if(tableData == undefined || tableData.length == 0){return;}
+	stroke(0);
+	line(0,200,width,200);
+ 	// draw lines
+  	let px = 0;
+  	let py = tableData[0][0];
+  	for(let i =0; i < tableData.length; i++){
+   		let x = map(i,0,years,0,width);
+    	let y = map(tableData[i][0],0,startingNumInput.value()*3,200,0);
+    	line(px, py, x, y);
+  		//store the last position
+    	px = x;
+    	py = y;
+  	} 
+}
 function buttonPressed(){
+	background(255);
 	//reset values
 	territories = new Array();
 	birds = new Array();
